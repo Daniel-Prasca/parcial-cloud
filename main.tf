@@ -1,11 +1,11 @@
-# Configure the AWS provider
+# AWS Provider
 provider "aws" {
   region     = "us-west-2"
   access_key = "acces-key"  # llave de acceso
   secret_key = "secret-key" # llave secreta
 }
 
-# Create a VPC
+# VPC
 resource "aws_vpc" "parcial" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -13,7 +13,7 @@ resource "aws_vpc" "parcial" {
   }
 }
 
-# Create two subnets
+# Subred1
 resource "aws_subnet" "subnet1" {
   cidr_block        = "10.0.1.0/24"
   vpc_id            = aws_vpc.parcial.id
@@ -23,6 +23,7 @@ resource "aws_subnet" "subnet1" {
   }
 }
 
+#Subred2
 resource "aws_subnet" "subnet2" {
   cidr_block        = "10.0.2.0/24"
   vpc_id            = aws_vpc.parcial.id
@@ -32,14 +33,14 @@ resource "aws_subnet" "subnet2" {
   }
 }
 
-# Create an Internet Gateway
+#Internet Gateway
 resource "aws_internet_gateway" "parcial" {
   tags = {
     Name = "parcial-igw"
   }
 }
 
-# Create a route table
+# Tabla de enrutamiento
 resource "aws_route_table" "parcial" {
   vpc_id = aws_vpc.parcial.id
   tags = {
@@ -47,7 +48,7 @@ resource "aws_route_table" "parcial" {
   }
 }
 
-# Associate the route table with the subnets
+# Asociación de la tabla de enrutamiento con las subredes
 resource "aws_route_table_association" "parcial" {
   route_table_id = aws_route_table.parcial.id
   subnet_id      = aws_subnet.subnet1.id
@@ -58,9 +59,26 @@ resource "aws_route_table_association" "parcial2" {
   subnet_id      = aws_subnet.subnet2.id
 }
 
-# Create an EC2 instance
+# Grupo de seguridad
+resource "aws_security_group" "parcial" {
+  name        = "parcial-sg"
+  description = "parcial security group"
+  vpc_id      = aws_vpc.parcial.id
+
+ 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+# Creacion de instancias EC2
+#Instancia 1
 resource "aws_instance" "parcial" {
-  ami                    = "ami-023e152801ee4846a" // Replace with your desired AMI
+  ami                    = "ami-023e152801ee4846a" 
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.parcial.id]
   subnet_id              = aws_subnet.subnet1.id
@@ -69,9 +87,9 @@ resource "aws_instance" "parcial" {
   }
 }
 
-# Create an EC2 instance 2
+# Instancia 2
 resource "aws_instance" "parcial2" {
-  ami                    = "ami-023e152801ee4846a" // Replace with your desired AMI
+  ami                    = "ami-023e152801ee4846a"
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.parcial.id]
   subnet_id              = aws_subnet.subnet2.id
@@ -79,21 +97,3 @@ resource "aws_instance" "parcial2" {
     Name = "parcial-instance-2"
   }
 }
-
-# Create a security group
-resource "aws_security_group" "parcial" {
-  name        = "parcial-sg"
-  description = "parcial security group"
-  vpc_id      = aws_vpc.parcial.id
-
-  # Allow inbound traffic on port 22
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-#terraform init
-#terraform apply 
-#terraform apply -destroy
